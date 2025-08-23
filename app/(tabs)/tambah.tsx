@@ -13,7 +13,7 @@ export default function App() {
       {/* Konten utama */}
       <View className="flex-1 items-center justify-center">
         <Text className="text-xl font-bold text-blue-500">
-          Welcome to Pengeluaran!
+          Tambah Screen
         </Text>
       </View>
     </SafeAreaView>
