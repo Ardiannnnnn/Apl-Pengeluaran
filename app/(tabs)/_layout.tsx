@@ -37,11 +37,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="tambah"
+        name="statistik"
         options={{
-          title: "Tambah",
+          title: "Statistik",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons size={size} name="add" color={color} />
+            <Ionicons size={size} name="pie-chart" color={color} />
           ),
         }}
       />
