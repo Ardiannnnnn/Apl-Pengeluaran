@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "366237419933",
+    "project_id": "pengeluaran-app",
+    "storage_bucket": "pengeluaran-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366237419933:android:b71f8119cdaacba0044774",
+        "android_client_info": {
+          "package_name": "com.ardiexpo.aplpengeluaran"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "366237419933-8qnicbgbhf4o3f21jroid466q9312ko5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ardiexpo.aplpengeluaran",
+            "certificate_hash": "9a58ed3121f965f4133a8a4c555b813b9215075c"
+          }
+        },
+        {
+          "client_id": "366237419933-i0grtfktv09bjadnc088fks2vauagfq2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZvYM7hICe97kINzyN-o7NC_bL0DonDew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "366237419933-i0grtfktv09bjadnc088fks2vauagfq2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

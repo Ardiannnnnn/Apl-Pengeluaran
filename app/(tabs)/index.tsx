@@ -7,10 +7,26 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useColorScheme,
 } from "react-native";
 
 export default function App() {
-  // Data dummy untuk expenses
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  // Data dummy untuk expenses tracking
+  const expenseData = {
+    today: 125000,
+    thisMonth: 850000,
+    lastMonth: 1200000,
+    daysInMonth: 30,
+    daysPassed: 15, // hari ke-15 dalam bulan
+  };
+
+  // Hitung daily average
+  const dailyAverage = Math.round(expenseData.thisMonth / expenseData.daysPassed);
+
+  // Data dummy untuk recent expenses
   const recentExpenses = [
     {
       id: 1,
@@ -50,81 +66,102 @@ export default function App() {
     {
       name: "Food",
       icon: "restaurant",
-      color: "bg-orange-100",
-      iconColor: "text-orange-600",
+      color: isDark ? "bg-orange-900" : "bg-orange-100",
+      iconColor: isDark ? "#fb923c" : "#ea580c",
     },
     {
       name: "Transport",
       icon: "car",
-      color: "bg-blue-100",
-      iconColor: "text-blue-600",
+      color: isDark ? "bg-blue-900" : "bg-blue-100",
+      iconColor: isDark ? "#60a5fa" : "#2563eb",
     },
     {
       name: "Shopping",
       icon: "bag",
-      color: "bg-purple-100",
-      iconColor: "text-purple-600",
+      color: isDark ? "bg-purple-900" : "bg-purple-100",
+      iconColor: isDark ? "#a78bfa" : "#7c3aed",
     },
     {
       name: "Bills",
       icon: "receipt",
-      color: "bg-red-100",
-      iconColor: "text-red-600",
+      color: isDark ? "bg-red-900" : "bg-red-100",
+      iconColor: isDark ? "#f87171" : "#dc2626",
     },
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="h-10 bg-white" />
-      <StatusBar style="dark" translucent />
+    <SafeAreaView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 py-10" showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View className="bg-white m-3 px-6 pt-4 pb-6 rounded-3xl shadow-sm">
+        <View
+          className={`m-3 px-6 pt-4 pb-6 rounded-3xl shadow-sm ${
+            isDark ? "bg-gray-800 shadow-gray-900" : "bg-white"
+          }`}
+        >
           <View className="flex-row justify-between items-center mb-6">
             <View>
-              <Text className="text-gray-600 text-sm">Good morning</Text>
-              <Text className="text-2xl font-bold text-gray-800">John Doe</Text>
+              <Text
+                className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+              >
+                Good morning
+              </Text>
+              <Text
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
+              >
+                John Doe
+              </Text>
             </View>
-            <TouchableOpacity className="bg-gray-100 p-3 rounded-full">
+            <TouchableOpacity
+              className={`p-3 rounded-full ${
+                isDark ? "bg-gray-700" : "bg-gray-100"
+              }`}
+            >
               <Ionicons
                 name="notifications-outline"
                 size={24}
-                color="#374151"
+                color={isDark ? "#f3f4f6" : "#374151"}
               />
             </TouchableOpacity>
           </View>
 
-          {/* Balance Card with Real Gradient */}
+          {/* Expense Tracking Card */}
           <View className="rounded-2xl overflow-hidden">
             <LinearGradient
-              colors={["#3b82f6", "#8b5cf6"]}
+              colors={isDark ? ["#1e40af", "#7c3aed"] : ["#3b82f6", "#8b5cf6"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ padding: 24 }} // padding manual
+              style={{ padding: 24 }}
             >
-              <Text className="text-white text-sm opacity-90">
-                Total Balance
-              </Text>
-              <Text className="text-white text-3xl font-bold mt-1">
-                Rp 2,450,000
-              </Text>
+              {/* Today's Expense - Primary */}
+              <View className="mb-3">
+                <Text className="text-white text-sm opacity-75">Today</Text>
+                <Text className="text-white text-3xl font-bold">
+                  Rp {expenseData.today.toLocaleString()}
+                </Text>
+              </View>
 
-              <View className="flex-row justify-between mt-4">
-                <View>
-                  <Text className="text-white text-xs opacity-75">
-                    This Month
-                  </Text>
+              {/* Daily Average - Secondary */}
+              <View className="mb-4">
+                <Text className="text-white text-xs opacity-75">Daily Average</Text>
+                <Text className="text-white text-lg font-semibold">
+                  Rp {dailyAverage.toLocaleString()}
+                </Text>
+              </View>
+
+              {/* Monthly Comparison - Split Bottom */}
+              <View className="flex-row justify-between pt-2 border-t border-white border-opacity-20">
+                <View className="flex-1">
+                  <Text className="text-white text-xs opacity-75">This Month</Text>
                   <Text className="text-white text-lg font-semibold">
-                    Rp 850,000
+                    Rp {(expenseData.thisMonth / 1000000).toFixed(1)}M
                   </Text>
                 </View>
-                <View>
-                  <Text className="text-white text-xs opacity-75">
-                    Last Month
-                  </Text>
+                <View className="flex-1 items-end">
+                  <Text className="text-white text-xs opacity-75">Last Month</Text>
                   <Text className="text-white text-lg font-semibold">
-                    Rp 1,200,000
+                    Rp {(expenseData.lastMonth / 1000000).toFixed(1)}M
                   </Text>
                 </View>
               </View>
@@ -132,41 +169,20 @@ export default function App() {
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View className="px-6 mt-6">
-          <Text className="text-lg font-bold text-gray-800 mb-4">
-            Quick Actions
-          </Text>
-          <View className="flex-row justify-between">
-            <TouchableOpacity className="bg-white p-4 rounded-2xl shadow-sm flex-1 mr-2 items-center">
-              <View className="bg-green-100 p-3 rounded-full mb-2">
-                <Ionicons name="add" size={24} color="#059669" />
-              </View>
-              <Text className="text-gray-700 font-medium">Add Expense</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-white p-4 rounded-2xl shadow-sm flex-1 mx-1 items-center">
-              <View className="bg-blue-100 p-3 rounded-full mb-2">
-                <Ionicons name="stats-chart" size={24} color="#2563eb" />
-              </View>
-              <Text className="text-gray-700 font-medium">Analytics</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-white p-4 rounded-2xl shadow-sm flex-1 ml-2 items-center">
-              <View className="bg-purple-100 p-3 rounded-full mb-2">
-                <Ionicons name="card" size={24} color="#7c3aed" />
-              </View>
-              <Text className="text-gray-700 font-medium">Budget</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Categories */}
         <View className="px-6 mt-6">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-bold text-gray-800">Categories</Text>
+            <Text
+              className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}
+            >
+              Categories
+            </Text>
             <TouchableOpacity>
-              <Text className="text-blue-500 font-medium">See All</Text>
+              <Text
+                className={`font-medium ${isDark ? "text-blue-400" : "text-blue-500"}`}
+              >
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -183,10 +199,14 @@ export default function App() {
                   <Ionicons
                     name={category.icon as any}
                     size={28}
-                    className={category.iconColor}
+                    color={category.iconColor}
                   />
                 </View>
-                <Text className="text-center text-sm text-gray-600 mt-2 font-medium">
+                <Text
+                  className={`text-center text-sm mt-2 font-medium ${
+                    isDark ? "text-gray-400" : "text-gray-600"
+                  }`}
+                >
                   {category.name}
                 </Text>
               </TouchableOpacity>
@@ -195,40 +215,66 @@ export default function App() {
         </View>
 
         {/* Recent Expenses */}
-        <View className="px-6 mt-6 mb-6">
+        <View className="px-6 mt-6 mb-20">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-bold text-gray-800">
+            <Text
+              className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}
+            >
               Recent Expenses
             </Text>
             <TouchableOpacity>
-              <Text className="text-blue-500 font-medium">See All</Text>
+              <Text
+                className={`font-medium ${isDark ? "text-blue-400" : "text-blue-500"}`}
+              >
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View className="bg-white rounded-2xl shadow-sm">
+          <View
+            className={`rounded-2xl shadow-sm ${
+              isDark ? "bg-gray-800 shadow-gray-900" : "bg-white"
+            }`}
+          >
             {recentExpenses.map((expense, index) => (
               <TouchableOpacity
                 key={expense.id}
-                className={`p-4 flex-row items-center justify-between ${index !== recentExpenses.length - 1 ? "border-b border-gray-100" : ""}`}
+                className={`p-4 flex-row items-center justify-between ${
+                  index !== recentExpenses.length - 1
+                    ? isDark
+                      ? "border-b border-gray-700"
+                      : "border-b border-gray-100"
+                    : ""
+                }`}
               >
                 <View className="flex-row items-center flex-1">
-                  <View className="bg-gray-100 p-3 rounded-full mr-3">
+                  <View
+                    className={`p-3 rounded-full mr-3 ${
+                      isDark ? "bg-gray-700" : "bg-gray-100"
+                    }`}
+                  >
                     <Ionicons
                       name={expense.icon as any}
                       size={20}
-                      color="#6b7280"
+                      color={isDark ? "#d1d5db" : "#6b7280"}
                     />
                   </View>
                   <View className="flex-1">
-                    <Text className="font-semibold text-gray-800">
+                    <Text
+                      className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+                    >
                       {expense.title}
                     </Text>
-                    <Text className="text-sm text-gray-500">
+                    <Text
+                      className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                    >
                       {expense.category} • {expense.date}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-lg font-bold text-red-500">
+                <Text
+                  className={`text-lg font-bold ${isDark ? "text-red-400" : "text-red-500"}`}
+                >
                   -Rp {expense.amount.toLocaleString()}
                 </Text>
               </TouchableOpacity>
@@ -238,7 +284,11 @@ export default function App() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity className="absolute bottom-6 right-6 bg-blue-500 w-14 h-14 rounded-full justify-center items-center shadow-lg">
+      <TouchableOpacity
+        className={`absolute bottom-6 right-6 w-14 h-14 rounded-full justify-center items-center shadow-lg ${
+          isDark ? "bg-blue-600 shadow-gray-900" : "bg-blue-500"
+        }`}
+      >
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
     </SafeAreaView>

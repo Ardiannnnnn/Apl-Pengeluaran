@@ -2,6 +2,7 @@
   "expo": {
     "name": "APL-Pengeluaran",
     "slug": "APL-Pengeluaran",
+    "owner": "ardi_expo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,13 +10,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ardiexpo.aplpengeluaran"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.ardiexpo.aplpengeluaran",
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -30,13 +33,18 @@
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "resizeMode": "contain"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e60c41b1-71ea-4a3a-8b3c-1cf648818950"
+      }
     }
   }
 }
