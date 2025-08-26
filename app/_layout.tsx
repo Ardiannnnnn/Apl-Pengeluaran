@@ -15,7 +15,6 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
-      {/* Login screen bisa dihapus/dikosongkan dulu */}
     </Stack>
   );
 }
