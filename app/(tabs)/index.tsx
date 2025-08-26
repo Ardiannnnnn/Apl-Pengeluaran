@@ -110,7 +110,7 @@ export default function App() {
               <Text
                 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
               >
-                John Doe
+                Ardian
               </Text>
             </View>
             <TouchableOpacity
