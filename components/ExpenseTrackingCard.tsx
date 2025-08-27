@@ -62,12 +62,10 @@ export default function ExpenseTrackingCard({
                 </Text>
               </>
             )}
-            {dateFilterMode !== "today" && (
-              <>
-                <Ionicons name="calendar" size={12} color="white" />
-                <Text className="text-white text-xs opacity-75 ml-1">Date</Text>
-              </>
-            )}
+            <>
+              <Ionicons name="calendar" size={12} color="white" />
+              <Text className="text-white text-xs opacity-75 ml-1">Date</Text>
+            </>
           </View>
         </View>
 

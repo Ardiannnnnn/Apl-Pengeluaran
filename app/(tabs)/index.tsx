@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   RefreshControl,
   SafeAreaView,
@@ -35,6 +34,7 @@ import {
   formatTargetDate,
   setupMidnightReset,
 } from "../../utils/dateUtils";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -147,6 +147,7 @@ export default function App() {
           try {
             await expenseService.delete(expenseId);
             Alert.alert("Success", "Expense deleted!");
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             Alert.alert("Error", "Failed to delete expense");
           }
@@ -157,21 +158,7 @@ export default function App() {
 
   // Loading state
   if (loading) {
-    return (
-      <SafeAreaView
-        className={`flex-1 justify-center items-center ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
-      >
-        <ActivityIndicator
-          size="large"
-          color={isDark ? "#3b82f6" : "#2563eb"}
-        />
-        <Text
-          className={`mt-4 text-lg ${isDark ? "text-white" : "text-gray-800"}`}
-        >
-          Loading data...
-        </Text>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Loading ..." />;
   }
 
   return (

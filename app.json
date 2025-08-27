@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "APL-Pengeluaran",
-    "slug": "APL-Pengeluaran",
+    "name": "Cost Tracker",
+    "slug": "cost-tracker",
     "owner": "ardi_expo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/ic_launcher.png",
     "scheme": "aplpengeluaran",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -15,7 +15,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/ic_launcher_foreground.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.ardiexpo.aplpengeluaran",
@@ -31,7 +31,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/ic_launcher.png",
           "imageWidth": 200,
           "resizeMode": "contain"
         }
