@@ -1,12 +1,13 @@
-import React from "react";
-import { View, Text, useColorScheme } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import { Text, useColorScheme, View } from "react-native";
 import { Category } from "../services/firebaseService";
 import { DateFilterMode, formatTargetDate } from "../utils/dateUtils";
 
 interface AnalyticsData {
   today: number;
+  thisWeek: number; // ✅ Keep thisWeek for actual calendar
   thisMonth: number;
   lastMonth: number;
   dailyAverage: number;
@@ -50,7 +51,10 @@ export default function ExpenseTrackingCard({
         <View className="flex-row justify-between items-center mb-3">
           <Text className="text-white text-sm opacity-75">
             {selectedCategory
-              ? `${selectedCategory.name} - ${formatTargetDate(dateFilterMode, selectedDate)}`
+              ? `${selectedCategory.name} - ${formatTargetDate(
+                  dateFilterMode,
+                  selectedDate
+                )}`
               : formatTargetDate(dateFilterMode, selectedDate)}
           </Text>
           <View className="flex-row items-center">
@@ -69,6 +73,7 @@ export default function ExpenseTrackingCard({
           </View>
         </View>
 
+        {/* Main Amount */}
         <Text className="text-white text-3xl font-bold">
           Rp {analytics.today.toLocaleString("id-ID")}
         </Text>
@@ -83,17 +88,17 @@ export default function ExpenseTrackingCard({
           </Text>
         </View>
 
-        {/* Monthly Comparison */}
+        {/* Comparison - Original 2 columns style */}
         <View className="flex-row justify-between pt-2 border-t border-white border-opacity-20">
           <View className="flex-1">
             <Text className="text-white text-xs opacity-75">This Month</Text>
-            <Text className="text-white text-lg font-semibold">
+            <Text className="text-white text-sm font-semibold">
               {formatAmount(analytics.thisMonth)}
             </Text>
           </View>
           <View className="flex-1 items-end">
             <Text className="text-white text-xs opacity-75">Last Month</Text>
-            <Text className="text-white text-lg font-semibold">
+            <Text className="text-white text-sm font-semibold">
               {formatAmount(analytics.lastMonth)}
             </Text>
           </View>

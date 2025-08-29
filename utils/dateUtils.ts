@@ -1,4 +1,11 @@
-export type DateFilterMode = 'today' | 'yesterday' | 'custom';
+export type DateFilterMode = 
+  | "today" 
+  | "yesterday" 
+  | "thisWeek"     // ✅ NEW
+  | "thisMonth"    // ✅ NEW 
+  | "lastWeek" 
+  | "lastMonth" 
+  | "custom";
 
 // Helper function to check if two dates are the same day
 export const isSameDay = (date1: Date, date2: Date): boolean => {
@@ -37,10 +44,18 @@ export const formatTargetDate = (
   const today = new Date();
   
   switch (dateFilterMode) {
-    case 'today':
-      return 'Today';
-    case 'yesterday':
-      return 'Yesterday';
+    case "today":
+      return "Today";
+    case "yesterday":
+      return "Yesterday";
+    case "thisWeek":
+      return "This Week";     // ✅ NEW
+    case "thisMonth":
+      return "This Month";    // ✅ NEW
+    case "lastWeek":
+      return "Last Week";
+    case "lastMonth":
+      return "Last Month";
     case 'custom':
       if (isSameDay(selectedDate, today)) return 'Today';
       
