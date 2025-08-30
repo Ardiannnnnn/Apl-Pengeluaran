@@ -1,10 +1,6 @@
 export type DateFilterMode = 
   | "today" 
-  | "yesterday" 
-  | "thisWeek"     // ✅ NEW
-  | "thisMonth"    // ✅ NEW 
-  | "lastWeek" 
-  | "lastMonth" 
+  | "yesterday"    // ✅ Make sure this exists
   | "custom";
 
 // Helper function to check if two dates are the same day
@@ -38,38 +34,22 @@ export const formatDate = (date: Date): string => {
 
 // Format target date for display
 export const formatTargetDate = (
-  dateFilterMode: DateFilterMode,
-  selectedDate: Date
+  mode: DateFilterMode,
+  date: Date
 ): string => {
-  const today = new Date();
-  
-  switch (dateFilterMode) {
+  switch (mode) {
     case "today":
       return "Today";
     case "yesterday":
       return "Yesterday";
-    case "thisWeek":
-      return "This Week";     // ✅ NEW
-    case "thisMonth":
-      return "This Month";    // ✅ NEW
-    case "lastWeek":
-      return "Last Week";
-    case "lastMonth":
-      return "Last Month";
-    case 'custom':
-      if (isSameDay(selectedDate, today)) return 'Today';
-      
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      if (isSameDay(selectedDate, yesterday)) return 'Yesterday';
-      
-      return selectedDate.toLocaleDateString('id-ID', { 
-        weekday: 'short',
-        day: 'numeric', 
-        month: 'short' 
+    case "custom":
+      return date.toLocaleDateString("id-ID", {
+        weekday: "short",
+        month: "short", 
+        day: "numeric",
       });
     default:
-      return 'Today';
+      return "Today";
   }
 };
 

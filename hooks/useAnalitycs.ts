@@ -4,7 +4,9 @@ import { DateFilterMode, getTargetDate } from '../utils/dateUtils';
 
 interface AnalyticsData {
   today: number;
-  thisWeek: number; // ✅ NEW: Add thisWeek
+  yesterday: number; // ✅ ADD
+  custom: number;    // ✅ ADD
+  thisWeek: number;
   thisMonth: number;
   lastMonth: number;
   dailyAverage: number;
@@ -38,6 +40,34 @@ export const useAnalytics = (
       .filter(expense => {
         const expenseDate = new Date(expense.date);
         return expenseDate >= startOfToday && expenseDate <= endOfToday;
+      })
+      .reduce((total, expense) => total + expense.amount, 0);
+
+    // ✅ YESTERDAY: Previous day
+    const yesterday = new Date(actualToday);
+    yesterday.setDate(actualToday.getDate() - 1);
+    const startOfYesterday = new Date(yesterday);
+    startOfYesterday.setHours(0, 0, 0, 0);
+    const endOfYesterday = new Date(yesterday);
+    endOfYesterday.setHours(23, 59, 59, 999);
+
+    const yesterdayExpenses = filteredExpenses
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startOfYesterday && expenseDate <= endOfYesterday;
+      })
+      .reduce((total, expense) => total + expense.amount, 0);
+
+    // ✅ CUSTOM: Selected date expenses
+    const startOfCustom = new Date(selectedDate);
+    startOfCustom.setHours(0, 0, 0, 0);
+    const endOfCustom = new Date(selectedDate);
+    endOfCustom.setHours(23, 59, 59, 999);
+
+    const customExpenses = filteredExpenses
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startOfCustom && expenseDate <= endOfCustom;
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
@@ -108,14 +138,15 @@ export const useAnalytics = (
     const dailyAverage = daysWithExpenses > 0 ? Math.round(thisMonthExpenses / daysWithExpenses) : 0;
 
     // Debug logs
-    console.log('📊 Analytics calculation (Calendar-based):', {
+    console.log('📊 Analytics calculation (with yesterday & custom):', {
       selectedCategory: selectedCategory?.name || 'All',
       dateMode: dateFilterMode,
+      selectedDate: selectedDate.toDateString(),
       actualToday: actualToday.toDateString(),
-      weekRange: `${weekStart.toDateString()} - ${weekEnd.toDateString()}`,
-      monthRange: `${startOfThisMonth.toDateString()} - ${endOfThisMonth.toDateString()}`,
+      yesterday: yesterdayExpenses,
       today: todayExpenses,
-      thisWeek: thisWeekExpenses, // ✅ NEW
+      custom: customExpenses,
+      thisWeek: thisWeekExpenses,
       thisMonth: thisMonthExpenses,
       lastMonth: lastMonthExpenses,
       daysWithExpenses,
@@ -125,7 +156,9 @@ export const useAnalytics = (
 
     return {
       today: todayExpenses,
-      thisWeek: thisWeekExpenses, // ✅ NEW
+      yesterday: yesterdayExpenses,  // ✅ NEW
+      custom: customExpenses,        // ✅ NEW
+      thisWeek: thisWeekExpenses,
       thisMonth: thisMonthExpenses,
       lastMonth: lastMonthExpenses,
       dailyAverage,

@@ -7,7 +7,9 @@ import { DateFilterMode, formatTargetDate } from "../utils/dateUtils";
 
 interface AnalyticsData {
   today: number;
-  thisWeek: number; // ✅ Keep thisWeek for actual calendar
+  yesterday: number; // ✅ Add yesterday
+  custom: number;    // ✅ Add custom date amount
+  thisWeek: number;
   thisMonth: number;
   lastMonth: number;
   dailyAverage: number;
@@ -36,6 +38,20 @@ export default function ExpenseTrackingCard({
       return `Rp ${(amount / 1000).toFixed(0)}K`;
     } else {
       return `Rp ${amount.toLocaleString("id-ID")}`;
+    }
+  };
+
+  // ✅ Get amount based on selected date filter mode
+  const getMainAmount = (): number => {
+    switch (dateFilterMode) {
+      case "today":
+        return analytics.today;
+      case "yesterday":
+        return analytics.yesterday;
+      case "custom":
+        return analytics.custom;
+      default:
+        return analytics.today; // fallback
     }
   };
 
@@ -73,13 +89,21 @@ export default function ExpenseTrackingCard({
           </View>
         </View>
 
-        {/* Main Amount */}
+        {/* ✅ Main Amount - Dynamic based on selected date */}
         <Text className="text-white text-3xl font-bold">
-          Rp {analytics.today.toLocaleString("id-ID")}
+          Rp {getMainAmount().toLocaleString("id-ID")}
         </Text>
 
+        {/* ✅ Dynamic subtitle based on date mode */}
+        <View className="mb-4 mt-2">
+          <Text className="text-white text-xs opacity-75">
+            Total spending on {formatTargetDate(dateFilterMode, selectedDate).toLowerCase()}
+            {selectedCategory ? ` (${selectedCategory.name})` : ""}
+          </Text>
+        </View>
+
         {/* Daily Average */}
-        <View className="mb-4 mt-3">
+        <View className="mb-4">
           <Text className="text-white text-xs opacity-75">
             Daily Average {selectedCategory ? `(${selectedCategory.name})` : ""}
           </Text>
