@@ -615,7 +615,6 @@ export default function StatistikScreen() {
             </View>
           </View>
         </View>
-        =
       </ScrollView>
     </SafeAreaView>
   );
