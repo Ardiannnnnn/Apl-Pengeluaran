@@ -26,7 +26,6 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="aplpengeluaran"/>
         <data android:scheme="exp+apl-pengeluaran"/>
-        <data android:scheme="exp+cost-tracker"/>
       </intent-filter>
     </activity>
   </application>
