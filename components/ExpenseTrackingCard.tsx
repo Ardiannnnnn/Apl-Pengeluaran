@@ -150,17 +150,8 @@ export default function ExpenseTrackingCard({
           {formatExactAmount(getMainAmount())}
         </Text>
 
-        {/* Dynamic subtitle based on date mode */}
-        <View className="mb-4 mt-2">
-          <Text className="text-white text-xs opacity-75">
-            Total spending on{" "}
-            {formatTargetDate(dateFilterMode, selectedDate).toLowerCase()}
-            {selectedCategory ? ` (${selectedCategory.name})` : ""}
-          </Text>
-        </View>
-
         {/* ✅ Daily Average - Exact value */}
-        <View className="mb-4">
+        <View className="my-4">
           <Text className="text-white text-xs opacity-75">
             Daily Average {selectedCategory ? `(${selectedCategory.name})` : ""}
           </Text>
