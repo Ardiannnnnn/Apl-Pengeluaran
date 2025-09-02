@@ -136,6 +136,7 @@ export default function ExpenseForm({
         setCustomDate(new Date());
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, editMode, editExpense]);
 
   const loadCategories = async () => {
