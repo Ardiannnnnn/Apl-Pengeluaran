@@ -4,13 +4,17 @@ import { DateFilterMode, getTargetDate } from '../utils/dateUtils';
 
 interface AnalyticsData {
   today: number;
-  yesterday: number; // ✅ ADD
-  custom: number;    // ✅ ADD
+  yesterday: number;
+  custom: number;
   thisWeek: number;
   thisMonth: number;
   lastMonth: number;
   dailyAverage: number;
   targetDate: Date;
+  // ✅ ADD new properties
+  selectedMonth?: number;
+  selectedPreviousMonth?: number;
+  selectedMonthDailyAverage?: number;
 }
 
 export const useAnalytics = (
@@ -29,7 +33,7 @@ export const useAnalytics = (
 
     const targetDate = getTargetDate(dateFilterMode, selectedDate);
     
-    // ✅ TODAY: Always use actual today (not selectedDate for analytics)
+    // ✅ TODAY
     const actualToday = new Date();
     const startOfToday = new Date(actualToday);
     startOfToday.setHours(0, 0, 0, 0);
@@ -43,7 +47,7 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ YESTERDAY: Previous day
+    // ✅ YESTERDAY
     const yesterday = new Date(actualToday);
     yesterday.setDate(actualToday.getDate() - 1);
     const startOfYesterday = new Date(yesterday);
@@ -58,7 +62,7 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ CUSTOM: Selected date expenses
+    // ✅ CUSTOM DATE
     const startOfCustom = new Date(selectedDate);
     startOfCustom.setHours(0, 0, 0, 0);
     const endOfCustom = new Date(selectedDate);
@@ -71,11 +75,11 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ THIS WEEK: Monday to Sunday of current week
+    // ✅ THIS WEEK
     const getThisWeek = () => {
       const today = new Date();
-      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Get Monday of this week
+      const dayOfWeek = today.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
       const monday = new Date(today);
       monday.setDate(today.getDate() + mondayOffset);
@@ -96,7 +100,7 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ THIS MONTH: 1st to last day of current month
+    // ✅ THIS MONTH (current month)
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     
@@ -107,7 +111,7 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ LAST MONTH: Previous month
+    // ✅ LAST MONTH (previous month)
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
@@ -118,51 +122,95 @@ export const useAnalytics = (
       })
       .reduce((total, expense) => total + expense.amount, 0);
 
-    // ✅ DAILY AVERAGE: Based on actual calendar days with expenses this month
+    // ✅ SELECTED MONTH (month from selected date)
+    const selectedDateObj = new Date(selectedDate);
+    const startOfSelectedMonth = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), 1);
+    const endOfSelectedMonth = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth() + 1, 1);
+    
+    const selectedMonthExpenses = filteredExpenses
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startOfSelectedMonth && expenseDate < endOfSelectedMonth;
+      })
+      .reduce((total, expense) => total + expense.amount, 0);
+
+    // ✅ SELECTED PREVIOUS MONTH (month before selected date)
+    const startOfSelectedPrevMonth = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth() - 1, 1);
+    const endOfSelectedPrevMonth = new Date(selectedDateObj.getFullYear(), selectedDateObj.getMonth(), 1);
+    
+    const selectedPreviousMonthExpenses = filteredExpenses
+      .filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= startOfSelectedPrevMonth && expenseDate < endOfSelectedPrevMonth;
+      })
+      .reduce((total, expense) => total + expense.amount, 0);
+
+    // ✅ DAILY AVERAGE for current month
     const thisMonthExpensesList = filteredExpenses.filter(expense => {
       const expenseDate = new Date(expense.date);
       return expenseDate >= startOfThisMonth && expenseDate < endOfThisMonth;
     });
 
-    // Group expenses by date to count unique days with expenses
     const expensesByDate = new Map<string, number>();
-    
     thisMonthExpensesList.forEach(expense => {
       const dateKey = new Date(expense.date).toDateString();
       const currentTotal = expensesByDate.get(dateKey) || 0;
       expensesByDate.set(dateKey, currentTotal + expense.amount);
     });
 
-    // Calculate daily average based on actual days with expenses
     const daysWithExpenses = expensesByDate.size;
     const dailyAverage = daysWithExpenses > 0 ? Math.round(thisMonthExpenses / daysWithExpenses) : 0;
 
+    // ✅ DAILY AVERAGE for selected month
+    const selectedMonthExpensesList = filteredExpenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= startOfSelectedMonth && expenseDate < endOfSelectedMonth;
+    });
+
+    const selectedExpensesByDate = new Map<string, number>();
+    selectedMonthExpensesList.forEach(expense => {
+      const dateKey = new Date(expense.date).toDateString();
+      const currentTotal = selectedExpensesByDate.get(dateKey) || 0;
+      selectedExpensesByDate.set(dateKey, currentTotal + expense.amount);
+    });
+
+    const selectedDaysWithExpenses = selectedExpensesByDate.size;
+    const selectedMonthDailyAverage = selectedDaysWithExpenses > 0 ? Math.round(selectedMonthExpenses / selectedDaysWithExpenses) : 0;
+
     // Debug logs
-    console.log('📊 Analytics calculation (with yesterday & custom):', {
+    console.log('📊 Analytics calculation (with selected month):', {
       selectedCategory: selectedCategory?.name || 'All',
       dateMode: dateFilterMode,
       selectedDate: selectedDate.toDateString(),
       actualToday: actualToday.toDateString(),
-      yesterday: yesterdayExpenses,
       today: todayExpenses,
+      yesterday: yesterdayExpenses,
       custom: customExpenses,
       thisWeek: thisWeekExpenses,
       thisMonth: thisMonthExpenses,
       lastMonth: lastMonthExpenses,
-      daysWithExpenses,
+      selectedMonth: selectedMonthExpenses,        // ✅ NEW
+      selectedPreviousMonth: selectedPreviousMonthExpenses, // ✅ NEW
+      selectedMonthDailyAverage: selectedMonthDailyAverage, // ✅ NEW
       dailyAverage,
+      daysWithExpenses,
+      selectedDaysWithExpenses, // ✅ NEW
       filteredExpensesCount: filteredExpenses.length,
     });
 
     return {
       today: todayExpenses,
-      yesterday: yesterdayExpenses,  // ✅ NEW
-      custom: customExpenses,        // ✅ NEW
+      yesterday: yesterdayExpenses,
+      custom: customExpenses,
       thisWeek: thisWeekExpenses,
       thisMonth: thisMonthExpenses,
       lastMonth: lastMonthExpenses,
       dailyAverage,
       targetDate,
+      // ✅ ADD new calculated values
+      selectedMonth: selectedMonthExpenses,
+      selectedPreviousMonth: selectedPreviousMonthExpenses,
+      selectedMonthDailyAverage: selectedMonthDailyAverage,
     };
   }, [expenses, selectedCategory, dateFilterMode, selectedDate]);
 };

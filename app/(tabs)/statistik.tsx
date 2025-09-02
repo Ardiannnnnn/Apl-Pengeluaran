@@ -18,14 +18,12 @@ export default function StatistikScreen() {
 
   // State
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month">("week");
 
   // Load expenses
   useEffect(() => {
     const unsubscribe = expenseService.subscribe((expenseData) => {
       setExpenses(expenseData);
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -63,7 +61,7 @@ export default function StatistikScreen() {
 
   // Get expenses for current period
   const getCurrentPeriodExpenses = () => {
-    if (period === "week") {
+    if (period === "week") {    
       const { start, end } = getThisWeek();
       return expenses.filter((expense) => {
         const expenseDate = new Date(expense.date);

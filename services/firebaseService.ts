@@ -1,15 +1,15 @@
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  orderBy, 
-  serverTimestamp,
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
   onSnapshot,
-  Timestamp
+  orderBy,
+  query,
+  serverTimestamp,
+  Timestamp,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 
@@ -32,13 +32,40 @@ export interface Category {
   iconColor: string;
 }
 
+// ✅ Helper function for consistent date conversion
+const convertToDate = (dateValue: any): Date => {
+  if (!dateValue) return new Date();
+  
+  // If it's already a Date object
+  if (dateValue instanceof Date) return dateValue;
+  
+  // If it's a Firestore Timestamp
+  if (dateValue?.toDate) return dateValue.toDate();
+  
+  // If it's a string (ISO format)
+  if (typeof dateValue === 'string') return new Date(dateValue);
+  
+  // Fallback to current date
+  return new Date();
+};
+
+// ✅ Helper function to save date consistently
+const convertFromDate = (date: Date): string => {
+  // Ensure we save as ISO string without timezone issues
+  return date.toISOString();
+};
+
 // CRUD Operations for Expenses
 export const expenseService = {
   // Create - Add new expense
   create: async (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       const docRef = await addDoc(collection(db, 'expenses'), {
-        ...expense,
+        title: expense.title,
+        amount: expense.amount,
+        category: expense.category,
+        icon: expense.icon,
+        date: convertFromDate(expense.date), // ✅ Consistent date conversion
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -63,14 +90,41 @@ export const expenseService = {
       const expenses: Expense[] = [];
       
       querySnapshot.forEach((doc) => {
-        expenses.push({
+        const data = doc.data();
+        
+        // ✅ Debug log for each expense
+        console.log('📄 Raw expense data:', {
           id: doc.id,
-          ...doc.data(),
-          date: doc.data().date?.toDate() || new Date(),
-        } as Expense);
+          title: data.title,
+          amount: data.amount,
+          rawDate: data.date,
+          dateType: typeof data.date,
+        });
+        
+        const expense: Expense = {
+          id: doc.id,
+          title: data.title,
+          amount: data.amount,
+          category: data.category,
+          icon: data.icon,
+          date: convertToDate(data.date), // ✅ Consistent date conversion
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        };
+        
+        // ✅ Debug log for converted expense
+        console.log('✅ Converted expense:', {
+          id: expense.id,
+          title: expense.title,
+          amount: expense.amount,
+          convertedDate: expense.date.toISOString(),
+          dateString: expense.date.toDateString(),
+        });
+        
+        expenses.push(expense);
       });
       
-      console.log('✅ Fetched expenses:', expenses.length);
+      console.log('✅ Total fetched expenses:', expenses.length);
       return expenses;
     } catch (error) {
       console.error('❌ Error fetching expenses:', error);
@@ -87,26 +141,54 @@ export const expenseService = {
 
     return onSnapshot(q, (querySnapshot) => {
       const expenses: Expense[] = [];
+      
       querySnapshot.forEach((doc) => {
-        expenses.push({
+        const data = doc.data();
+        
+        const expense: Expense = {
           id: doc.id,
-          ...doc.data(),
-          date: doc.data().date?.toDate() || new Date(),
-        } as Expense);
+          title: data.title,
+          amount: data.amount,
+          category: data.category,
+          icon: data.icon,
+          date: convertToDate(data.date), // ✅ Consistent date conversion
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        };
+        
+        expenses.push(expense);
       });
+      
+      console.log('🔄 Real-time update: received', expenses.length, 'expenses');
       callback(expenses);
     });
   },
 
-  // Update - Update existing expense
-  update: async (id: string, updates: Partial<Expense>) => {
+  // ✅ Update - Handle Date conversion consistently
+  update: async (id: string, expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> => {
     try {
       const expenseRef = doc(db, 'expenses', id);
-      await updateDoc(expenseRef, {
-        ...updates,
+      
+      // ✅ Prepare update data with consistent date conversion
+      const updateData = {
+        title: expense.title,
+        amount: expense.amount,
+        category: expense.category,
+        icon: expense.icon,
+        date: expense.date.toISOString(), // ✅ Consistent date conversion
         updatedAt: serverTimestamp(),
+      };
+      
+      console.log('📝 Updating expense:', {
+        id,
+        title: expense.title,
+        amount: expense.amount,
+        originalDate: expense.date,
+        convertedDate: updateData.date,
       });
-      console.log('✅ Expense updated:', id);
+      
+      await updateDoc(expenseRef, updateData);
+      console.log('✅ Expense updated successfully:', id);
     } catch (error) {
       console.error('❌ Error updating expense:', error);
       throw error;

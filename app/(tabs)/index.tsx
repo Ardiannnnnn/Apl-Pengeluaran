@@ -27,6 +27,7 @@ import {
 } from "../../services/firebaseService";
 
 // Hooks & Utils
+import LoadingScreen from "@/components/LoadingScreen";
 import { useAnalytics } from "@/hooks/useAnalitycs";
 import { useFilteredExpenses } from "@/hooks/useFilteredExpense";
 import {
@@ -34,7 +35,6 @@ import {
   formatTargetDate,
   setupMidnightReset,
 } from "../../utils/dateUtils";
-import LoadingScreen from "@/components/LoadingScreen";
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -53,6 +53,10 @@ export default function App() {
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>("today");
+
+  // ✅ ADD edit states
+  const [editMode, setEditMode] = useState(false);
+  const [editExpense, setEditExpense] = useState<Expense | null>(null);
 
   // Custom hooks for analytics and filtered data
   const analytics = useAnalytics(
@@ -116,8 +120,22 @@ export default function App() {
   };
 
   // Event handlers
-  const handleAddExpense = () => {
+  const handleEditExpense = (expense: Expense) => {
+    setEditExpense(expense);
+    setEditMode(true);
     setShowExpenseForm(true);
+  };
+
+  const handleAddExpense = () => {
+    setEditExpense(null);
+    setEditMode(false);
+    setShowExpenseForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowExpenseForm(false);
+    setEditMode(false);
+    setEditExpense(null);
   };
 
   const handleSelectCategory = (category: Category | null) => {
@@ -147,13 +165,37 @@ export default function App() {
           try {
             await expenseService.delete(expenseId);
             Alert.alert("Success", "Expense deleted!");
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (error) {
             Alert.alert("Error", "Failed to delete expense");
           }
         },
       },
     ]);
+  };
+
+  // Add this helper function at the top of your component
+  const formatExpenseDate = (date: Date): string => {
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Check if it's today
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    }
+
+    // Check if it's yesterday
+    if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    }
+
+    // Otherwise show formatted date
+    return date.toLocaleDateString("id-ID", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // Loading state
@@ -301,6 +343,8 @@ export default function App() {
                         : "border-b border-gray-100"
                       : ""
                   }`}
+                  // ✅ CHANGE: onPress to edit, onLongPress to delete
+                  onPress={() => handleEditExpense(expense)}
                   onLongPress={() =>
                     handleDeleteExpense(expense.id, expense.title)
                   }
@@ -326,15 +370,24 @@ export default function App() {
                       <Text
                         className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}
                       >
-                        {expense.category} • {expense.date}
+                        {expense.category} • {formatExpenseDate(expense.date)}
                       </Text>
                     </View>
                   </View>
-                  <Text
-                    className={`text-lg font-bold ${isDark ? "text-red-400" : "text-red-500"}`}
-                  >
-                    -Rp {expense.amount.toLocaleString()}
-                  </Text>
+                  <View className="flex-row items-center">
+                    <Text
+                      className={`text-lg font-bold ${isDark ? "text-red-400" : "text-red-500"}`}
+                    >
+                      -Rp {expense.amount.toLocaleString()}
+                    </Text>
+                    {/* ✅ ADD edit icon indicator */}
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={isDark ? "#6b7280" : "#9ca3af"}
+                      style={{ marginLeft: 8 }}
+                    />
+                  </View>
                 </TouchableOpacity>
               ))
             )}
@@ -352,10 +405,13 @@ export default function App() {
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
 
+      {/* ✅ UPDATE ExpenseForm with edit props */}
       <ExpenseForm
         visible={showExpenseForm}
-        onClose={() => setShowExpenseForm(false)}
+        onClose={handleCloseForm}
         onSuccess={onRefresh}
+        editMode={editMode}
+        editExpense={editExpense}
       />
     </SafeAreaView>
   );

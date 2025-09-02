@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,19 +15,27 @@ import {
 import {
   Category,
   categoryService,
+  Expense,
   expenseService,
 } from "../services/firebaseService";
+
+// ✅ Date Mode Type - hanya untuk add mode
+type DateMode = "today" | "yesterday" | "custom";
 
 interface ExpenseFormProps {
   visible: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  editMode?: boolean;
+  editExpense?: Expense | null;
 }
 
 export default function ExpenseForm({
   visible,
   onClose,
   onSuccess,
+  editMode = false,
+  editExpense = null,
 }: ExpenseFormProps) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -34,25 +43,100 @@ export default function ExpenseForm({
   // Form states
   const [amount, setAmount] = useState("");
   const [title, setTitle] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // ✅ Date states - hanya untuk add mode
+  const [dateMode, setDateMode] = useState<DateMode>("today");
+  const [customDate, setCustomDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // UI states
   const [loading, setLoading] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Load categories when modal opens
+  // ✅ Enhanced helper function to handle various date formats
+  const getSafeDate = (dateValue: any): Date => {
+    if (!dateValue) {
+      console.warn('⚠️ Empty date value, using current date');
+      return new Date();
+    }
+    
+    // If it's already a Date object
+    if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+      console.log('✅ Valid Date object found');
+      return dateValue;
+    }
+    
+    // If it's a string
+    if (typeof dateValue === 'string') {
+      // Handle special text values
+      if (dateValue.toLowerCase() === 'today') {
+        console.log('✅ Converting "today" string to Date');
+        return new Date();
+      }
+      
+      if (dateValue.toLowerCase() === 'yesterday') {
+        console.log('✅ Converting "yesterday" string to Date');
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday;
+      }
+      
+      // Try to parse as ISO date string
+      const parsedDate = new Date(dateValue);
+      if (!isNaN(parsedDate.getTime())) {
+        console.log('✅ Successfully parsed ISO date string');
+        return parsedDate;
+      }
+      
+      console.warn('⚠️ Unable to parse date string:', dateValue);
+    }
+    
+    // If it's a Firestore Timestamp
+    if (dateValue?.toDate && typeof dateValue.toDate === 'function') {
+      console.log('✅ Converting Firestore Timestamp');
+      return dateValue.toDate();
+    }
+    
+    // If it's a number (timestamp)
+    if (typeof dateValue === 'number') {
+      console.log('✅ Converting timestamp number');
+      return new Date(dateValue);
+    }
+    
+    console.error('❌ Invalid date format:', typeof dateValue, dateValue);
+    console.log('🔄 Fallback to current date');
+    return new Date();
+  };
+
   useEffect(() => {
     if (visible) {
       loadCategories();
-      // Reset form
-      setAmount("");
-      setTitle("");
-      setSelectedCategory(null);
+      
+      if (editMode && editExpense) {
+        // ✅ EDIT MODE: Populate form dengan data existing
+        console.log('🔍 Debug editExpense date:', {
+          id: editExpense.id,
+          title: editExpense.title,
+          rawDate: editExpense.date,
+          dateType: typeof editExpense.date,
+          isDateInstance: editExpense.date instanceof Date,
+          safeDate: getSafeDate(editExpense.date).toISOString(),
+        });
+        
+        setAmount(editExpense.amount.toLocaleString("id-ID"));
+        setTitle(editExpense.title);
+      } else {
+        // ✅ ADD MODE: Reset form
+        setAmount("");
+        setTitle("");
+        setSelectedCategory(null);
+        setDateMode("today");
+        setCustomDate(new Date());
+      }
     }
-  }, [visible]);
+  }, [visible, editMode, editExpense]);
 
   const loadCategories = async () => {
     try {
@@ -60,15 +144,74 @@ export default function ExpenseForm({
       const categoriesData = await categoryService.getAll();
       setCategories(categoriesData);
 
-      // Auto-select first category if available
-      if (categoriesData.length > 0) {
-        setSelectedCategory(categoriesData[0]);
+      if (editMode && editExpense) {
+        // ✅ EDIT MODE: Find dan set matching category
+        const matchingCategory = categoriesData.find(
+          cat => cat.name === editExpense.category
+        );
+        setSelectedCategory(matchingCategory || null);
+      } else {
+        // ✅ ADD MODE: Auto-select first category
+        if (categoriesData.length > 0) {
+          setSelectedCategory(categoriesData[0]);
+        }
       }
     } catch (error) {
       console.error("❌ Error loading categories:", error);
       Alert.alert("Error", "Failed to load categories");
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  // ✅ Get expense date with proper error handling
+  const getExpenseDate = (): Date => {
+    if (editMode && editExpense) {
+      // ✅ EDIT MODE: Convert original date safely
+      const safeDate = getSafeDate(editExpense.date);
+      
+      console.log('📅 Edit mode - converting original date:', {
+        original: editExpense.date,
+        originalType: typeof editExpense.date,
+        converted: safeDate.toISOString(),
+        convertedDateString: safeDate.toDateString(),
+        isValidDate: !isNaN(safeDate.getTime()),
+      });
+      
+      return safeDate;
+    }
+
+    // ✅ ADD MODE: Gunakan tanggal sesuai mode
+    switch (dateMode) {
+      case "today":
+        return new Date();
+      case "yesterday":
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday;
+      case "custom":
+        return customDate;
+      default:
+        return new Date();
+    }
+  };
+
+  // ✅ Format date for display - hanya untuk add mode
+  const formatDateDisplay = (): string => {
+    switch (dateMode) {
+      case "today":
+        return "Today";
+      case "yesterday":
+        return "Yesterday";
+      case "custom":
+        return customDate.toLocaleDateString("id-ID", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      default:
+        return "Today";
     }
   };
 
@@ -95,41 +238,82 @@ export default function ExpenseForm({
       return;
     }
 
+    // ✅ ADD validation for edit mode
+    if (editMode && (!editExpense || !editExpense.id)) {
+      Alert.alert("Error", "Invalid expense data for editing");
+      return;
+    }
+
     try {
       setLoading(true);
+
+      // ✅ Get expense date with safe conversion
+      const expenseDate = getExpenseDate();
+      
+      // ✅ Enhanced date validation
+      if (!expenseDate || !(expenseDate instanceof Date) || isNaN(expenseDate.getTime())) {
+        console.error('❌ Date validation failed:', {
+          expenseDate,
+          isDate: expenseDate instanceof Date,
+          isValid: expenseDate ? !isNaN(expenseDate.getTime()) : false,
+          originalDate: editExpense?.date,
+          mode: editMode ? 'edit' : 'add',
+        });
+        Alert.alert("Error", "Invalid date detected. Please try again.");
+        return;
+      }
+
+      console.log('💾 Saving expense with validated date:', {
+        mode: editMode ? 'edit' : 'add',
+        originalRawDate: editMode ? editExpense?.date : 'N/A',
+        finalDate: expenseDate.toISOString(),
+        finalDateString: expenseDate.toDateString(),
+        isValidDate: !isNaN(expenseDate.getTime()),
+      });
 
       const expenseData = {
         title: title.trim(),
         amount: numericAmount,
         category: selectedCategory.name,
-        date: new Date(),
+        date: expenseDate, // ✅ Guaranteed to be valid Date object
         icon: selectedCategory.icon,
       };
 
-      await expenseService.create(expenseData);
-
-      Alert.alert("✅ Success", "Expense added successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            onSuccess?.();
-            onClose();
+      if (editMode && editExpense && editExpense.id) {
+        // ✅ UPDATE existing expense
+        await expenseService.update(editExpense.id, expenseData);
+        Alert.alert("✅ Success", "Expense updated successfully!", [
+          {
+            text: "OK",
+            onPress: () => {
+              onSuccess?.();
+              onClose();
+            },
           },
-        },
-      ]);
+        ]);
+      } else {
+        // ✅ CREATE new expense
+        await expenseService.create(expenseData);
+        Alert.alert("✅ Success", "Expense added successfully!", [
+          {
+            text: "OK",
+            onPress: () => {
+              onSuccess?.();
+              onClose();
+            },
+          },
+        ]);
+      }
     } catch (error) {
-      console.error("❌ Error adding expense:", error);
-      Alert.alert("❌ Error", "Failed to add expense");
+      console.error("❌ Error saving expense:", error);
+      Alert.alert("❌ Error", `Failed to ${editMode ? 'update' : 'add'} expense`);
     } finally {
       setLoading(false);
     }
   };
 
   const formatAmount = (text: string) => {
-    // Remove non-numeric characters
     const numericValue = text.replace(/[^0-9]/g, "");
-
-    // Format with thousands separator
     if (numericValue) {
       const formatted = parseInt(numericValue).toLocaleString("id-ID");
       setAmount(formatted);
@@ -162,7 +346,7 @@ export default function ExpenseForm({
             <Text
               className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
             >
-              Add Expense
+              {editMode ? "Edit Expense" : "Add Expense"}
             </Text>
 
             <TouchableOpacity
@@ -175,7 +359,9 @@ export default function ExpenseForm({
               {loading ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text className="text-white font-semibold">Save</Text>
+                <Text className="text-white font-semibold">
+                  {editMode ? "Update" : "Save"}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -204,7 +390,7 @@ export default function ExpenseForm({
                 placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
                 keyboardType="numeric"
                 className={`flex-1 text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
-                autoFocus
+                autoFocus={!editMode} // ✅ Only autofocus in add mode
               />
             </View>
           </View>
@@ -226,6 +412,103 @@ export default function ExpenseForm({
               numberOfLines={2}
             />
           </View>
+
+          {/* ✅ Date Selection - HANYA untuk ADD MODE */}
+          {!editMode && (
+            <View className="mb-6">
+              <Text
+                className={`text-lg font-semibold mb-3 ${isDark ? "text-white" : "text-gray-800"}`}
+              >
+                Date
+              </Text>
+
+              {/* Date Mode Buttons */}
+              <View className="flex-row mb-3">
+                <TouchableOpacity
+                  onPress={() => setDateMode("today")}
+                  className={`flex-1 p-3 rounded-l-xl border-r ${
+                    dateMode === "today"
+                      ? isDark ? "bg-blue-600 border-blue-500" : "bg-blue-500 border-blue-400"
+                      : isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  }`}
+                >
+                  <Text className={`text-center font-medium ${
+                    dateMode === "today" ? "text-white" : isDark ? "text-gray-300" : "text-gray-700"
+                  }`}>
+                    Today
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setDateMode("yesterday")}
+                  className={`flex-1 p-3 border-r ${
+                    dateMode === "yesterday"
+                      ? isDark ? "bg-blue-600 border-blue-500" : "bg-blue-500 border-blue-400"
+                      : isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  }`}
+                >
+                  <Text className={`text-center font-medium ${
+                    dateMode === "yesterday" ? "text-white" : isDark ? "text-gray-300" : "text-gray-700"
+                  }`}>
+                    Yesterday
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setDateMode("custom")}
+                  className={`flex-1 p-3 rounded-r-xl ${
+                    dateMode === "custom"
+                      ? isDark ? "bg-blue-600 border-blue-500" : "bg-blue-500 border-blue-400"
+                      : isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+                  }`}
+                >
+                  <Text className={`text-center font-medium ${
+                    dateMode === "custom" ? "text-white" : isDark ? "text-gray-300" : "text-gray-700"
+                  }`}>
+                    Custom
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Custom Date Picker */}
+              {dateMode === "custom" && (
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  className={`p-4 rounded-xl flex-row items-center justify-between ${
+                    isDark ? "bg-gray-800" : "bg-white"
+                  }`}
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color={isDark ? "#9ca3af" : "#6b7280"}
+                    />
+                    <Text className={`ml-2 ${isDark ? "text-white" : "text-gray-800"}`}>
+                      {customDate.toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={isDark ? "#6b7280" : "#9ca3af"}
+                  />
+                </TouchableOpacity>
+              )}
+
+              {/* Date Display */}
+              <View className={`mt-2 p-3 rounded-xl ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                <Text className={`text-center text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  Expense will be saved for: <Text className="font-semibold">{formatDateDisplay()}</Text>
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Category Selection */}
           <View className="mb-6">
@@ -299,7 +582,7 @@ export default function ExpenseForm({
                       <Ionicons
                         name={category.icon as any}
                         size={24}
-                        color={category.iconColor} // ✅ SELALU gunakan warna asli icon
+                        color={category.iconColor}
                       />
                     </View>
                     <Text
@@ -314,7 +597,6 @@ export default function ExpenseForm({
                       {category.name}
                     </Text>
 
-                    {/* ✅ HANYA 1 checkmark di pojok atas kanan */}
                     {selectedCategory?.id === category.id && (
                       <View className="absolute -top-1 -right-1">
                         <View className="w-6 h-6 bg-green-500 rounded-full justify-center items-center">
@@ -328,7 +610,7 @@ export default function ExpenseForm({
             )}
           </View>
 
-          {/* Preview */}
+          {/* ✅ Preview - Updated to show date only in add mode */}
           {amount && title && selectedCategory && (
             <View
               className={`p-4 rounded-2xl ${isDark ? "bg-gray-800" : "bg-white"}`}
@@ -357,7 +639,8 @@ export default function ExpenseForm({
                   <Text
                     className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}
                   >
-                    {selectedCategory.name} • Today
+                    {/* ✅ Show date only in add mode, category only in edit mode */}
+                    {editMode ? selectedCategory.name : `${selectedCategory.name} • ${formatDateDisplay()}`}
                   </Text>
                 </View>
                 <Text
@@ -369,6 +652,22 @@ export default function ExpenseForm({
             </View>
           )}
         </ScrollView>
+
+        {/* ✅ Date Picker Modal - HANYA untuk ADD MODE */}
+        {!editMode && showDatePicker && (
+          <DateTimePicker
+            value={customDate}
+            mode="date"
+            display="default"
+            onChange={(event, selectedDate) => {
+              setShowDatePicker(false);
+              if (selectedDate) {
+                setCustomDate(selectedDate);
+              }
+            }}
+            maximumDate={new Date()}
+          />
+        )}
       </View>
     </Modal>
   );
