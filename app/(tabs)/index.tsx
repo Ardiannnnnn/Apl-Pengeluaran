@@ -256,7 +256,7 @@ export default function App() {
 
   // Loading state
   if (loading) {
-    return <LoadingScreen message="Loading ..." />;
+    return <LoadingScreen message="Loading"/>;
   }
 
   return (
