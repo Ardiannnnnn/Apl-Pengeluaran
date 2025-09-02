@@ -58,6 +58,62 @@ export default function App() {
   const [editMode, setEditMode] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
 
+  // ✅ NEW: Dynamic time-based icon and greeting
+  const getTimeBasedIcon = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour >= 5 && currentHour < 7) {
+      // Sunrise (5-7 AM)
+      return {
+        name: "partly-sunny" as const,
+        color: isDark ? "#fbbf24" : "#f59e0b",
+      };
+    } else if (currentHour >= 7 && currentHour < 18) {
+      // Daytime (7 AM - 5 PM)
+      return {
+        name: "sunny" as const,
+        color: isDark ? "#fbbf24" : "#f59e0b",
+      };
+    } else if (currentHour >= 18 && currentHour < 19) {
+      // Sunset (5-7 PM)
+      return {
+        name: "partly-sunny" as const,
+        color: isDark ? "#f97316" : "#ea580c", // Orange for sunset
+      };
+    } else if (currentHour >= 19 && currentHour < 22) {
+      // Early evening (7-10 PM)
+      return {
+        name: "moon" as const,
+        color: isDark ? "#e5e7eb" : "#6b7280",
+      };
+    } else {
+      // Late night/early morning (10 PM - 5 AM)
+      return {
+        name: "moon" as const,
+        color: isDark ? "#9ca3af" : "#4b5563", // Darker for deep night
+      };
+    }
+  };
+
+  // ✅ NEW: Dynamic greeting based on time
+  const getTimeBasedGreeting = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour >= 5 && currentHour < 12) {
+      return "Good morning";
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return "Good afternoon";
+    } else if (currentHour >= 18 && currentHour < 21) {
+      return "Good evening";
+    } else {
+      return "Good night";
+    }
+  };
+
+  // Get current time-based data
+  const timeIcon = getTimeBasedIcon();
+  const greeting = getTimeBasedGreeting();
+
   // Custom hooks for analytics and filtered data
   const analytics = useAnalytics(
     expenses,
@@ -226,10 +282,11 @@ export default function App() {
         >
           <View className="flex-row justify-between items-center mb-6">
             <View>
+              {/* ✅ UPDATED: Dynamic greeting */}
               <Text
                 className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
               >
-                Good morning
+                {greeting}
               </Text>
               <Text
                 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
@@ -244,15 +301,16 @@ export default function App() {
                 </Text>
               )}
             </View>
+            {/* ✅ UPDATED: Dynamic time-based icon */}
             <TouchableOpacity
               className={`p-3 rounded-full ${
                 isDark ? "bg-gray-700" : "bg-gray-100"
               }`}
             >
               <Ionicons
-                name="sunny"
+                name={timeIcon.name}
                 size={24}
-                color={isDark ? "#f3f4f6" : "#374151"}
+                color={timeIcon.color}
               />
             </TouchableOpacity>
           </View>
