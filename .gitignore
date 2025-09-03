@@ -41,7 +41,7 @@ yarn-error.*
 google-services.json
 GoogleService-Info.plist
 firebase-config.js
-FirebaseConfig.ts
+# FirebaseConfig.ts
 
 # API Keys and secrets
 secrets.json
