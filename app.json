@@ -45,6 +45,17 @@
       "eas": {
         "projectId": "e60c41b1-71ea-4a3a-8b3c-1cf648818950"
       }
+    },
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "ardi_expo",
+            "project": "apl-pengeluaran"
+          }
+        }
+      ]
     }
   }
 }

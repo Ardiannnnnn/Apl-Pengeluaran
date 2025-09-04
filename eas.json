@@ -8,20 +8,24 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "image": "latest"
+        "image": "latest",
+        "buildType": "apk",
+        "applicationId": "com.ardiexpo.aplpengeluaran.dev"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk", 
-        "image": "latest"
+        "image": "latest",
+        "applicationId": "com.ardiexpo.aplpengeluaran.preview"
       }
     },
     "production": {
       "autoIncrement": true,
       "android": {
-        "image": "latest"
+        "image": "latest",
+        "applicationId": "com.ardiexpo.aplpengeluaran"
       }
     }
   },
